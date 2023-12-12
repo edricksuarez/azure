@@ -7,15 +7,16 @@
     LASTEDIT: December 11, 2023
 #>
 
+#Due to a bug in the implementation of Runbooks in Azure, the parameter names need to be specified in lowercase only. See: "https://github.com/Azure/azure-sdk-for-go/issues/4780" for more information.
 param (
     [Parameter(Mandatory=$true)]
-    [String]$SubscriptionID,
+    [String]$subscriptionid,
 
     [Parameter(Mandatory=$true)]
-    [String]$TagName,
+    [String]$tagname,
 
     [Parameter(Mandatory=$true)]
-    [Boolean]$TagValue
+    [Boolean]$tagvalue
 )
 
 try {
@@ -27,10 +28,10 @@ catch {
     throw $_.Exception
 }
 
-Set-AzContext -SubscriptionId $SubscriptionID
+Set-AzContext -SubscriptionId $subscriptioniD
 
 # Get VMs with the specified tags
-$VMs = Get-AzResource -ResourceType "Microsoft.Compute/virtualMachines" -TagName $TagName -TagValue $TagValue
+$VMs = Get-AzResource -ResourceType "Microsoft.Compute/virtualMachines" -TagName $tagname -TagValue $tagvalue
 
 foreach ($VM in $VMs) {
     # Get VM tags
