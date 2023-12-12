@@ -37,7 +37,7 @@ foreach ($VM in $VMs) {
     # Get VM tags
     $tags = $VM.Tags
 
-    if ($tags -and $tags.ContainsKey('AutoStartStop') -and $tags['AutoStartStop'] -eq 'true') {
+    if ($tags -and $tags.ContainsKey('Scheduler') -and $tags['Scheduler'] -eq 'true') {
         $startTime = [DateTime]::ParseExact($tags['StartTime'], 'HH:mm', $null)
         $stopTime = [DateTime]::ParseExact($tags['StopTime'], 'HH:mm', $null)
 
