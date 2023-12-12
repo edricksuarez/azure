@@ -28,7 +28,42 @@ catch {
     throw $_.Exception
 }
 
+# Set Azure Context
 Set-AzContext -SubscriptionId $subscriptioniD
+
+$zoneMappings = @{
+  "America/Los_Angeles" = "Pacific Standard Time"
+  "America/Vancouver" = "Pacific Standard Time"
+  "America/Denver" = "Mountain Standard Time"  
+  "America/Phoenix" = "US Mountain Standard Time"
+  "America/Chicago" = "Central Standard Time"
+  "America/New_York" = "Eastern Standard Time"  
+  "America/Anchorage" = "Alaskan Standard Time"
+  "America/Indianapolis" = "US Eastern Standard Time"
+
+  "Australia/Brisbane" = "E. Australia Standard Time"
+  "Australia/Adelaide" = "Cen. Australia Standard Time"
+  "Australia/Sydney" = "AUS Eastern Standard Time"
+  "Australia/Melbourne" = "AUS Eastern Standard Time"
+  "Australia/Perth" = "W. Australia Standard Time"
+
+  "Asia/Tokyo" = "Tokyo Standard Time"
+  "Asia/Shanghai" = "China Standard Time"
+  "Asia/Kolkata" = "India Standard Time"
+  "Asia/Dubai" = "Arabian Standard Time"
+  "Asia/Jerusalem" = "Israel Standard Time"
+
+  "Europe/Berlin" = "W. Europe Standard Time"
+  "Europe/Madrid" = "Romance Standard Time"
+  "Europe/Moscow" = "Russian Standard Time"
+
+  "Africa/Cairo" = "Egypt Standard Time"
+
+  "Pacific/Auckland" = "New Zealand Standard Time"
+  "Pacific/Honolulu" = "Hawaiian Standard Time"
+  "Europe/London" = "GMT Standard Time"
+  "Europe/Paris" = "Romance Standard Time" 
+}
 
 # Get VMs with the specified tags
 $VMs = Get-AzResource -ResourceType "Microsoft.Compute/virtualMachines" -TagName $tagname -TagValue $tagvalue
@@ -38,21 +73,30 @@ foreach ($VM in $VMs) {
     $tags = $VM.Tags
 
     if ($tags -and $tags.ContainsKey('Scheduler') -and $tags['Scheduler'] -eq 'true') {
+        $ianaZone = $tags["Timezone"]
+        $windowsTZ = $zoneMappings[$ianaZone]  
         $startTime = [DateTime]::ParseExact($tags['StartTime'], 'HH:mm', $null)
         $stopTime = [DateTime]::ParseExact($tags['StopTime'], 'HH:mm', $null)
 
         if ($tags -and $tags.ContainsKey('Timezone')) {
             $timezone = $tags['Timezone']
 
-            $currentTime = [System.DateTime]::Now.ToUniversalTime()
-            $currentTimeInTimeZone = [System.TimeZoneInfo]::ConvertTimeBySystemTimeZoneId($currentTime, $timezone)
+            $ianaZone = $tags["Timezone"]   
+            $windowsTZ = $zoneMappings[$ianaZone]  
 
-            $currentHour = $currentTimeInTimeZone.Hour
+            #$currentTime = [System.DateTime]::Now.ToUniversalTime()
+            #$currentTimeInTimeZone = [System.TimeZoneInfo]::ConvertTimeBySystemTimeZoneId($currentTime, $timezone)
+
+            #$currentHour = $currentTimeInTimeZone.Hour
+
+            $currentTime = [DateTime]::UtcNow
+            $currentTimeInTZ = [System.TimeZoneInfo]::ConvertTimeBySystemTimeZoneId($currentTime, $windowsTZ) 
+            $currentHour = $currentTimeInTZ.Hour
             $startHour = $startTime.Hour
             $stopHour = $stopTime.Hour
         }
 
-        Write-Output "Current Time in Timezone: $($currentTimeInTimeZone.ToString('yyyy-MM-dd HH:mm:ss'))"
+        Write-Output "Current Time in Timezone: $($currentTimeInTZ.ToString('yyyy-MM-dd HH:mm:ss'))"
         Write-Output "Start Time: $($startTime.ToString('yyyy-MM-dd HH:mm:ss'))"
         Write-Output "Stop Time: $($stopTime.ToString('yyyy-MM-dd HH:mm:ss'))"
 
